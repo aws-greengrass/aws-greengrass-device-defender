@@ -1,11 +1,19 @@
-## My Project
+## AWS Greengrass Device Defender
 
-TODO: Fill this README out!
+This is an AWS GreengrassV2 Component that reads system metrics on the device and sends metrics to AWS IOT Device Defender.
 
-Be sure to:
+## FAQ
 
-* Change the title in this README
-* Edit your repository description on GitHub
+## Dependencies
+[AWS IoT Device Defender Agent SDK (Python)](https://github.com/aws-samples/aws-iot-device-defender-agent-sdk-python>)
+
+
+## Sample Configuration
+```
+{
+  "SampleIntervalSeconds": 300 
+}
+```
 
 ## Security
 
