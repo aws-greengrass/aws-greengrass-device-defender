@@ -2,5 +2,7 @@ target/
 dist/
 .idea/
 .pytest_cache/
-*.DS_STORE
+**/__pycache__/
+**.DS_STORE
+**.DS_Store
 *.iml
