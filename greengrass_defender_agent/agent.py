@@ -45,55 +45,56 @@ def set_configuration(configuration):
     return new_config
 
 
-def set_configuration_and_publish(ipc_client, configuration):
+def set_configuration_and_publish(ipc_client, configuration, metrics_collector):
     """
     Call publish_metrics() with the new configuration object.
 
     :param ipc_client: Ipc client
     :param configuration: a dictionary object of configuration
+    :param metrics_collector: metrics collector
     """
-    publish_metrics(ipc_client, set_configuration(configuration), True)
+    new_config = set_configuration(configuration)
+    sample_interval_seconds = new_config[config.SAMPLE_INTERVAL_NEW_CONFIG_KEY]
+    config.logger.info("Collector running on device: {}".format(config.THING_NAME))
+    config.logger.info("Metrics topic: {}".format(config.TOPIC))
+    config.logger.info("Sampling interval: {} seconds".format(sample_interval_seconds))
+    publish_metrics(ipc_client, new_config, metrics_collector, sample_interval_seconds)
 
 
-def wait_for_config_changes(ipc_client):
+def wait_for_config_changes(ipc_client, metrics_collector):
     """
     Wait for configuration changes.
 
     :param ipc_client: Ipc client
+    :param metrics_collector: metrics collector
     """
     with config.condition:
         config.condition.wait()
-        set_configuration_and_publish(ipc_client, ipc_client.get_configuration())
-    wait_for_config_changes(ipc_client)
+        set_configuration_and_publish(ipc_client, ipc_client.get_configuration(), metrics_collector)
+    wait_for_config_changes(ipc_client, metrics_collector)
 
 
-def publish_metrics(ipc_client, new_config, config_changed):
+def publish_metrics(ipc_client, config_changed, metrics_collector, sample_interval_seconds):
     """
     Collect and publish metrics.
 
     :param ipc_client: Ipc client
-    :param new_config: a configuration object
     :param config_changed: boolean whether the configuration has changed
+    :param metrics_collector: metrics collector
+    :param sample_interval_seconds: sampling metrics interval in seconds
     """
     try:
         if config_changed and config.SCHEDULED_THREAD is not None:
             config.SCHEDULED_THREAD.cancel()
             config_changed = False
 
-        topic = config.TOPIC
-        sample_interval_seconds = new_config[config.SAMPLE_INTERVAL_NEW_CONFIG_KEY]
-
-        config.logger.info("Collector running on device: {}".format(config.THING_NAME))
-        config.logger.info("Metrics topic: {}".format(topic))
-        config.logger.info("Sampling interval: {} seconds".format(sample_interval_seconds))
-
-        metrics_collector = collector.Collector(short_metrics_names=False)
         metric = metrics_collector.collect_metrics()
         config.logger.debug("Publishing metrics: {}".format(metric.to_json_string()))
-        ipc_client.publish_to_iot_core(topic, metric.to_json_string())
+        ipc_client.publish_to_iot_core(config.TOPIC, metric.to_json_string())
 
         config.SCHEDULED_THREAD = Timer(
-            float(sample_interval_seconds), publish_metrics, [ipc_client, new_config, config_changed]
+            float(sample_interval_seconds), publish_metrics,
+            [ipc_client, config_changed, metrics_collector, sample_interval_seconds]
         )
         config.SCHEDULED_THREAD.start()
 
@@ -120,12 +121,15 @@ def main():
     ipc_client.subscribe_to_iot_core(config.TOPIC + "/accepted")
     ipc_client.subscribe_to_iot_core(config.TOPIC + "/rejected")
 
+    # Initialize metrics collector
+    metrics_collector = collector.Collector(short_metrics_names=False)
+
     # Start collecting and publishing metrics
-    set_configuration_and_publish(ipc_client, configuration)
+    set_configuration_and_publish(ipc_client, configuration, metrics_collector)
 
     # Subscribe to the subsequent configuration changes
     ipc_client.subscribe_to_config_updates()
     Thread(
         target=wait_for_config_changes,
-        args=(ipc_client,),
+        args=(ipc_client, metrics_collector),
     ).start()
