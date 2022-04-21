@@ -1,1 +1,1 @@
-git+git://github.com/aws-samples/aws-iot-device-defender-agent-sdk-python.git@a3d27c51311e12625bd0b774e8b730ead3bc515d
+git+https://github.com/aws-samples/aws-iot-device-defender-agent-sdk-python.git@a3d27c51311e12625bd0b774e8b730ead3bc515d
