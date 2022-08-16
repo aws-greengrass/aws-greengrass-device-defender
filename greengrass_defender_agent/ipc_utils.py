@@ -45,7 +45,7 @@ class IPCUtils:
         )
         self.lifecycle_handler = LifecycleHandler()
         connect_future = connection.connect(self.lifecycle_handler)
-        connect_future.result(config.TIMEOUT)
+        connect_future.result(config.IPC_CONNECT_TIMEOUT)
         self.ipc_client = client.GreengrassCoreIPCClient(connection)
         config.logger.info("Created IPC client...")
 
