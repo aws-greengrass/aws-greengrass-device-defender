@@ -111,7 +111,7 @@ def main():
     need_retry = True
     retry_time = INITIAL_RETRY_INTERVAL_SECONDS
 
-    while (need_retry)
+    while need_retry:
         try:
             ipc_client.connect()
             needRetry = False
@@ -122,7 +122,7 @@ def main():
             config.logger.info(
                 "Will retry client initialization in {} seconds".format(retry_time)
             )
-            if retry_time <= MAX_RETRY_INTERVAL_SECONDS
+            if retry_time <= MAX_RETRY_INTERVAL_SECONDS:
                 retry_time = retry_time * 2 + randint(0, MAX_JITTER_TIME_INTERVAL)
 
     # Get initial configuration from the recipe
