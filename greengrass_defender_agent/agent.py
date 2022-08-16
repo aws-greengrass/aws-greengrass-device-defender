@@ -114,7 +114,7 @@ def main():
     while need_retry:
         try:
             ipc_client.connect()
-            needRetry = False
+            need_retry = False
         except Exception as e:
             config.logger.error(
                 "Exception occurred during the creation of an IPC client: {}".format(e)
