@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from threading import Timer, Thread
+from random import randint
 
 from AWSIoTDeviceDefenderAgentSDK import collector
 from greengrass_defender_agent import config
@@ -106,13 +107,23 @@ def publish_metrics(ipc_client, config_changed, metrics_collector, sample_interv
 def main():
     # Get the ipc client
     ipc_client = ipc_utils.IPCUtils()
-    try:
-        ipc_client.connect()
-    except Exception as e:
-        config.logger.error(
-            "Exception occurred during the creation of an IPC client: {}".format(e)
-        )
-        exit(1)
+
+    need_retry = True
+    retry_time = INITIAL_RETRY_INTERVAL_SECONDS
+
+    while (need_retry)
+        try:
+            ipc_client.connect()
+            needRetry = False
+        except Exception as e:
+            config.logger.error(
+                "Exception occurred during the creation of an IPC client: {}".format(e)
+                )
+            config.logger.info(
+                "Will retry client initialization in {} seconds".format(retry_time)
+            )
+            if retry_time <= MAX_RETRY_INTERVAL_SECONDS
+                retry_time = retry_time * 2 + randint(0, MAX_JITTER_TIME_INTERVAL)
 
     # Get initial configuration from the recipe
     configuration = ipc_client.get_configuration()
