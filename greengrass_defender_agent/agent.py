@@ -125,7 +125,7 @@ def main():
             )
             sleep(retry_time)
             if retry_time < config.MAX_RETRY_INTERVAL_SECONDS:
-                retry_time = retry_time * 2 + randint(0, config.MAX_JITTER_TIME_INTERVAL)
+                retry_time = retry_time * 2 + randint(0, config.MAX_JITTER_TIME_INTERVAL_SECONDS)
             else:
                 retry_time = config.MAX_RETRY_INTERVAL_SECONDS
 

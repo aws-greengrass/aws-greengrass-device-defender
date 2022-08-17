@@ -19,7 +19,7 @@ THING_NAME = os.environ.get("AWS_IOT_THING_NAME")
 TOPIC = "$aws/things/{thing_name}/defender/metrics/json".format(thing_name=THING_NAME)
 INITIAL_RETRY_INTERVAL_SECONDS = 5
 MAX_RETRY_INTERVAL_SECONDS = 600  # 10 minutes
-MAX_JITTER_TIME_INTERVAL = 30
+MAX_JITTER_TIME_INTERVAL_SECONDS = 30
 
 
 # Set a condition variable
