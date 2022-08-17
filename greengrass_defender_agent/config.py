@@ -21,7 +21,6 @@ INITIAL_RETRY_INTERVAL_SECONDS = 5
 MAX_RETRY_INTERVAL_SECONDS = 600  # 10 minutes
 MAX_JITTER_TIME_INTERVAL_SECONDS = 30
 
-
 # Set a condition variable
 condition = Condition()
 
