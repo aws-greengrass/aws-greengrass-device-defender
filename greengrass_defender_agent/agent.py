@@ -3,6 +3,7 @@
 
 from threading import Timer, Thread
 from random import randint
+from time import sleep
 
 from AWSIoTDeviceDefenderAgentSDK import collector
 from greengrass_defender_agent import config
@@ -116,12 +117,13 @@ def main():
             ipc_client.connect()
             need_retry = False
         except Exception as e:
-            config.logger.error(
+            config.logger.exception(
                 "Exception occurred during the creation of an IPC client: {}".format(e)
                 )
             config.logger.info(
                 "Will retry client initialization in {} seconds".format(retry_time)
             )
+            sleep(retry_time)
             if retry_time <= config.MAX_RETRY_INTERVAL_SECONDS:
                 retry_time = retry_time * 2 + randint(0, config.MAX_JITTER_TIME_INTERVAL)
             else:
