@@ -49,9 +49,9 @@ def set_configuration(configuration):
 
 def set_env_variables_config():
     env_config = {}
-    if environ.get(config.CONNECT_AND_PUBLISH_RETRY_CONFIG_KEY):
+    if environ.get(config.PUBLISH_RETRY_CONFIG_KEY):
         try:
-            connect_publish_retry = int(environ.get(config.CONNECT_AND_PUBLISH_RETRY_CONFIG_KEY))
+            connect_publish_retry = int(environ.get(config.PUBLISH_RETRY_CONFIG_KEY))
         except (ValueError, TypeError):
             config.logger.warning(
                 "Invalid retry time. Using default retry count: {}".format(
@@ -59,24 +59,24 @@ def set_env_variables_config():
                 )
             )
             connect_publish_retry = config.DEFAULT_CONNECT_AND_PUBLISH_RETRY
-        if connect_publish_retry < config.MIN_CONNECT_AND_PUBLISH_RETRY:
+        if connect_publish_retry < config.MIN_PUBLISH_RETRY:
             config.logger.warning(
                 "Using minimum retry count: {}".format(
-                    config.MIN_CONNECT_AND_PUBLISH_RETRY
+                    config.MIN_PUBLISH_RETRY
                 )
             )
-            env_config[config.CONNECT_AND_PUBLISH_RETRY_CONFIG_KEY] = config.MIN_CONNECT_AND_PUBLISH_RETRY
-        elif connect_publish_retry > config.MAX_CONNECT_AND_PUBLISH_RETRY:
+            env_config[config.PUBLISH_RETRY_CONFIG_KEY] = config.MIN_PUBLISH_RETRY
+        elif connect_publish_retry > config.MAX_PUBLISH_RETRY:
             config.logger.warning(
                 "Using maximum retry count: {}".format(
-                    config.MAX_CONNECT_AND_PUBLISH_RETRY
+                    config.MAX_PUBLISH_RETRY
                 )
             )
-            env_config[config.CONNECT_AND_PUBLISH_RETRY_CONFIG_KEY] = config.MAX_CONNECT_AND_PUBLISH_RETRY
+            env_config[config.PUBLISH_RETRY_CONFIG_KEY] = config.MAX_PUBLISH_RETRY
         else:
-            env_config[config.CONNECT_AND_PUBLISH_RETRY_CONFIG_KEY] = connect_publish_retry
+            env_config[config.PUBLISH_RETRY_CONFIG_KEY] = connect_publish_retry
     else:
-        env_config[config.CONNECT_AND_PUBLISH_RETRY_CONFIG_KEY] = config.DEFAULT_CONNECT_AND_PUBLISH_RETRY
+        env_config[config.PUBLISH_RETRY_CONFIG_KEY] = config.DEFAULT_CONNECT_AND_PUBLISH_RETRY
         config.logger.warning(
             "Using default retry count: {}".format(
                 config.DEFAULT_CONNECT_AND_PUBLISH_RETRY
@@ -168,7 +168,6 @@ def main():
     # Connect to the GG Nucleus
     need_retry = True
     retry_time = config.INITIAL_RETRY_INTERVAL_SECONDS
-    env_config = set_env_variables_config()
     connect_retry = config.DEFAULT_CONNECT_AND_PUBLISH_RETRY
 
     while (need_retry and connect_retry > 0):
@@ -197,7 +196,8 @@ def main():
     metrics_collector = collector.Collector(short_metrics_names=False)
 
     # Start collecting and publishing metrics
-    publish_retry = env_config[config.CONNECT_AND_PUBLISH_RETRY_CONFIG_KEY]
+    env_config = set_env_variables_config()
+    publish_retry = env_config[config.PUBLISH_RETRY_CONFIG_KEY]
     need_retry = True
     retry_time = config.INITIAL_RETRY_INTERVAL_SECONDS
 
