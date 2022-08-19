@@ -171,7 +171,6 @@ def main():
     connect_retry = config.DEFAULT_CONNECT_AND_PUBLISH_RETRY
 
     while (need_retry and connect_retry > 0):
-        connect_retry -= 1
         try:
             ipc_client.connect()
             need_retry = False
@@ -184,6 +183,7 @@ def main():
 
             if connect_retry < 1:
                 exit(1)
+        connect_retry -= 1
 
     # Get initial configuration from the recipe
     configuration = ipc_client.get_configuration()
@@ -201,8 +201,7 @@ def main():
     need_retry = True
     retry_time = config.INITIAL_RETRY_INTERVAL_SECONDS
 
-    while (need_retry and publish_retry > 0):
-        publish_retry -= 1
+    while (need_retry and publish_retry >= 0):
         try:
             set_configuration_and_publish(ipc_client, configuration, metrics_collector)
             need_retry = False
@@ -212,6 +211,7 @@ def main():
                 retry_time = retry_time * 2 + randint(0, config.MAX_JITTER_TIME_INTERVAL_SECONDS)
             else:
                 retry_time = config.MAX_RETRY_INTERVAL_SECONDS
+        publish_retry -= 1
 
     # Subscribe to the subsequent configuration changes
     ipc_client.subscribe_to_config_updates()
