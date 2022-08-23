@@ -68,7 +68,7 @@ class IPCUtils:
             future.result(config.TIMEOUT)
             config.logger.info("Published to the IoT core...")
         except Exception as e:
-            config.logger.error("Exception occurred during publish to {}: {}".format(topic, e))
+            config.logger.exception("Exception occurred during publish to {}: {}".format(topic, e))
             raise e
 
     def subscribe_to_iot_core(self, topic):
@@ -86,7 +86,7 @@ class IPCUtils:
             future.result(config.TIMEOUT)
             config.logger.info("Subscribed to topic {}".format(topic))
         except Exception as e:
-            config.logger.error("Exception occurred during subscribe: {}".format(e))
+            config.logger.exception("Exception occurred during subscribe: {}".format(e))
             raise e
 
     def get_configuration(self):
@@ -102,7 +102,7 @@ class IPCUtils:
             result = operation.get_response().result(config.TIMEOUT)
             return result.value
         except Exception as e:
-            config.logger.error(
+            config.logger.exception(
                 "Exception occurred during fetching the configuration: {}".format(e)
             )
             raise e
@@ -120,7 +120,7 @@ class IPCUtils:
             subscribe_operation.activate(subsreq).result(config.TIMEOUT)
             subscribe_operation.get_response().result(config.TIMEOUT)
         except Exception as e:
-            config.logger.error(
+            config.logger.exception(
                 "Exception occurred during subscribing to the configuration updates: {}".format(e)
             )
             raise e
@@ -139,7 +139,7 @@ class ConfigUpdateHandler(client.SubscribeToConfigurationUpdateStreamHandler):
             config.condition.notify()
 
     def on_stream_error(self, error: Exception) -> bool:
-        config.logger.error("Error in config update subscriber - {0}".format(error))
+        config.logger.exception("Error in config update subscriber - {0}".format(error))
         return False
 
     def on_stream_closed(self) -> None:
@@ -162,7 +162,7 @@ class SubscribeToIoTCoreHandler(client.SubscribeToIoTCoreStreamHandler):
         config.logger.debug("Received message from topic {}: {}".format(self.topic, received_message))
 
     def on_stream_error(self, error: Exception) -> bool:
-        config.logger.error("Error in Iot Core subscriber - {0}".format(error))
+        config.logger.exception("Error in Iot Core subscriber - {0}".format(error))
         return False
 
     def on_stream_closed(self) -> None:

@@ -131,16 +131,34 @@ def publish_metrics(ipc_client, config_changed, metrics_collector, sample_interv
 
         metric = metrics_collector.collect_metrics()
         config.logger.debug("Publishing metrics: {}".format(metric.to_json_string()))
-        ipc_client.publish_to_iot_core(config.TOPIC, metric.to_json_string())
+
+        env_config = set_env_variables_config()
+        publish_retry = env_config[config.PUBLISH_RETRY_CONFIG_KEY]
+        need_retry = True
+        retry_time = config.INITIAL_RETRY_INTERVAL_SECONDS
+
+        while (need_retry and publish_retry >= 0):
+            try:
+                ipc_client.publish_to_iot_core(config.TOPIC, metric.to_json_string())
+                need_retry = False
+            except Exception as e:
+                if publish_retry < 1:
+                    config.logger.error("Exhausted all retries when publishing to cloud")
+                    raise e
+                handle_expcetion_and_sleep("metrics publish", e, retry_time, publish_retry)
+                if retry_time < config.MAX_RETRY_INTERVAL_SECONDS:
+                    retry_time = retry_time * 2 + randint(0, config.MAX_JITTER_TIME_INTERVAL_SECONDS)
+                else:
+                    retry_time = config.MAX_RETRY_INTERVAL_SECONDS
+            publish_retry -= 1
 
         config.SCHEDULED_THREAD = Timer(
             float(sample_interval_seconds), publish_metrics,
             [ipc_client, config_changed, metrics_collector, sample_interval_seconds]
         )
         config.SCHEDULED_THREAD.start()
-
     except Exception as e:
-        config.logger.error("Error collecting and publishing metrics: {}".format(e))
+        config.logger.exception("Error collecting and publishing metrics: {}".format(e))
         raise e
 
 
@@ -196,23 +214,8 @@ def main():
     metrics_collector = collector.Collector(short_metrics_names=False)
 
     # Start collecting and publishing metrics
-    env_config = set_env_variables_config()
-    publish_retry = env_config[config.PUBLISH_RETRY_CONFIG_KEY]
-    need_retry = True
-    retry_time = config.INITIAL_RETRY_INTERVAL_SECONDS
-
-    while (need_retry and publish_retry >= 0):
-        try:
-            set_configuration_and_publish(ipc_client, configuration, metrics_collector)
-            need_retry = False
-        except Exception as e:
-            handle_expcetion_and_sleep("metrics publish", e, retry_time, publish_retry)
-            if retry_time < config.MAX_RETRY_INTERVAL_SECONDS:
-                retry_time = retry_time * 2 + randint(0, config.MAX_JITTER_TIME_INTERVAL_SECONDS)
-            else:
-                retry_time = config.MAX_RETRY_INTERVAL_SECONDS
-        publish_retry -= 1
-
+    set_configuration_and_publish(ipc_client, configuration, metrics_collector)
+ 
     # Subscribe to the subsequent configuration changes
     ipc_client.subscribe_to_config_updates()
     Thread(
