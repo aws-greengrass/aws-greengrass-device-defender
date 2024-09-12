@@ -1,6 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import atexit
 from threading import Timer, Thread
 from random import randint
 from time import sleep
@@ -151,12 +152,12 @@ def publish_metrics(ipc_client, config_changed, metrics_collector, sample_interv
                 else:
                     retry_time = config.MAX_RETRY_INTERVAL_SECONDS
             publish_retry -= 1
-
-        config.SCHEDULED_THREAD = Timer(
-            float(sample_interval_seconds), publish_metrics,
-            [ipc_client, config_changed, metrics_collector, sample_interval_seconds]
-        )
-        config.SCHEDULED_THREAD.start()
+        if not config.IS_SHUTTING_DOWN:
+            config.SCHEDULED_THREAD = Timer(
+                float(sample_interval_seconds), publish_metrics,
+                [ipc_client, config_changed, metrics_collector, sample_interval_seconds]
+            )
+            config.SCHEDULED_THREAD.start()
     except Exception as e:
         config.logger.exception("Error collecting and publishing metrics: {}".format(e))
         raise e
@@ -222,3 +223,10 @@ def main():
         target=wait_for_config_changes,
         args=(ipc_client, metrics_collector),
     ).start()
+
+@atexit.register
+def cleanup():
+    config.logger.info("Stopping scheduled metrics publish due to shutdown")
+    config.IS_SHUTTING_DOWN = True
+    if config.SCHEDULED_THREAD is not None:
+        config.SCHEDULED_THREAD.cancel()

@@ -14,6 +14,7 @@ IPC_CONNECT_TIMEOUT = 120
 TIMEOUT = 10
 MIN_INTERVAL_SECONDS = 300  # minimum sample interval at which metrics messages can be published
 SCHEDULED_THREAD = None
+IS_SHUTTING_DOWN = False
 SAMPLE_INTERVAL_CONFIG_KEY = "SampleIntervalSeconds"
 PUBLISH_RETRY_CONFIG_KEY = "GG_DD_PUB_RETRY_COUNT"
 MIN_PUBLISH_RETRY = 0
