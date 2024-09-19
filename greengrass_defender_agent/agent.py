@@ -218,7 +218,10 @@ def main():
  
     # Subscribe to the subsequent configuration changes
     ipc_client.subscribe_to_config_updates()
-    Thread(
+    configChangeThread = Thread(
         target=wait_for_config_changes,
         args=(ipc_client, metrics_collector),
-    ).start()
+    )
+    configChangeThread.start()
+    configChangeThread.join()
+    
