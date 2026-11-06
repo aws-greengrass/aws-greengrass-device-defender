@@ -8,6 +8,10 @@ handler = logging.StreamHandler(sys.stdout)
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 
+# PEP 668 distros (e.g. Debian 12+, Ubuntu 23.04+) block pip installs into the system Python, even with --user.
+# Use the env var instead of --break-system-packages, since pip < 23.0.1 rejects the unknown flag but ignores the env var.
+pip_env = dict(os.environ, PIP_BREAK_SYSTEM_PACKAGES="1")
+
 proxy_url = os.environ.get("ALL_PROXY")
 if proxy_url is not None:
     # Just try to check if proxy is http or https
@@ -35,7 +39,7 @@ if proxy_url is not None:
             sys.exit(1)
         try:
             subprocess.check_call(
-                [sys.executable, '-m', 'pip', 'install', '--cert', './ca-bundle.crt', 'awsiotsdk', 'cbor', 'psutil', '--user'])
+                [sys.executable, '-m', 'pip', 'install', '--cert', './ca-bundle.crt', 'awsiotsdk', 'cbor', 'psutil', '--user'], env=pip_env)
             sys.exit(0)
         except Exception:
             logger.exception(
@@ -44,7 +48,7 @@ if proxy_url is not None:
 
 logger.info("Installing 'awsiotsdk', 'cbor' and 'psutil'")
 try:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'awsiotsdk', 'cbor', 'psutil', '--user'])
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'awsiotsdk', 'cbor', 'psutil', '--user'], env=pip_env)
 except Exception:
     logger.exception(
         "Error installing dependencies. Please set 'UseInstaller' to 'False' and pre-install 'awsiotsdk', 'cbor' and 'psutil'")
